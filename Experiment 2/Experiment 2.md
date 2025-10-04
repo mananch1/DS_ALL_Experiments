@@ -13,8 +13,8 @@ alternatively you may also run the following code to run the app
 
     pip install -r requirements.txt
     
-    cmd python data_node.py 7000 data.db
+    python data_node.py 7000 data.db
     
-    cmd python app_node.py 5000  
+    python app_node.py 5000  
 
 and open the client.html
