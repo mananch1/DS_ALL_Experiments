@@ -88,6 +88,7 @@ class RicAgra:
 
         while(self.OK_COUNT!=len(ip_list)-1):
             sleep(2)
+            print(self.OK_COUNT)
         self.OK_COUNT=0
             
     

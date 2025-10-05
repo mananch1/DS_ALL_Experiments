@@ -1,7 +1,5 @@
 import sys
-import socket
-import json
-from random import shuffle
+import xmlrpc.client
 from itertools import cycle
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -12,31 +10,43 @@ DATA_NODES = [
     ('127.0.0.1', 7002),
     ('127.0.0.1', 7003),
 ]
-shuffle(DATA_NODES)
+# We don't shuffle anymore to make round-robin predictable
 data_node_cycler = cycle(DATA_NODES)
+
 # --- Initialize Flask App ---
 app = Flask(__name__)
 CORS(app)
 
-# --- RPC Client Function ---
+# --- XML-RPC Client Function ---
 def send_rpc_to_data_node(rpc_message):
-    """Sends a message to a Data Node and gets a response."""
-    node_address = next(data_node_cycler)
-    print(f"[*] AppNode-{app.port}: Forwarding action '{rpc_message['action']}' to DataNode {node_address}")
+    """Sends a message to a Data Node using XML-RPC."""
+    node_host, node_port = next(data_node_cycler)
+    action = rpc_message['action']
+    data = rpc_message['data']
+    
+    print(f"[*] AppNode-{app.port}: Forwarding action '{action}' to DataNode http://{node_host}:{node_port}")
+    
     try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.connect(node_address)
-            sock.sendall(json.dumps(rpc_message).encode('utf-8'))
-            response_data = sock.recv(4096).decode('utf-8')
-            response_json = json.loads(response_data)
-            print(f"[*] AppNode-{app.port}: Received response from DataNode: {response_json}")
-            return response_json
-    except ConnectionRefusedError:
-        return {"status": "error", "code": 503, "error": f"Data service at {node_address} is unavailable."}
+        # Create a proxy to the data node's XML-RPC server
+        proxy = xmlrpc.client.ServerProxy(f"http://{node_host}:{node_port}/", allow_none=True)
+        
+        # Call the remote 'dispatch_rpc' function with the action and its data
+        response_json = proxy.dispatch_rpc(action, data)
+        
+        print(f"[*] AppNode-{app.port}: Received response from DataNode: {response_json}")
+        return response_json
+        
+    except (ConnectionRefusedError, xmlrpc.client.ProtocolError) as e:
+        error_msg = f"Data service at {node_host}:{node_port} is unavailable."
+        print(f"[ERROR] {error_msg} - {e}")
+        return {"status": "error", "code": 503, "error": error_msg}
+        
     except Exception as e:
-        return {"status": "error", "code": 500, "error": f"An RPC error occurred: {e}"}
+        error_msg = f"An unexpected RPC error occurred: {e}"
+        print(f"[ERROR] {error_msg}")
+        return {"status": "error", "code": 500, "error": error_msg}
 
-# --- API Endpoints ---
+# --- API Endpoints (No changes needed here) ---
 
 @app.route('/add_account', methods=['POST'])
 def add_account():
