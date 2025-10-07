@@ -6,10 +6,15 @@ It has implemented many algorithms such as Global Time averaging, Ricart Agarwal
 
 To run the project go to the final merged folder and then follow the instructions given in the markdown file
 This project was made by, 
+
 23102C0044
+
 23102C0049
+
 23102C0047
+
 23102C0048
+
 23102C0068
 
 Acknowledgement to:
