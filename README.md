@@ -19,4 +19,5 @@ This project was made by,
 
 Acknowledgement to:
 
-Dr. Amit K. Nerurkar
+Lecture Professor In-charge : Dr. Amit K. Nerurkar
+Practical Professor In-Charge : Prof. Prakash Parmar
